@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>話有回聲 - 焦慮聲音解籤</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fffbeb 0%, #ffedd5 50%, #fef3c7 100%);
+            color: #57534e;
+            min-height: 100vh;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        .font-serif-tc { font-family: 'Noto Serif TC', serif; }
+
+        /* 溫暖背景光暈 */
+        .glowing-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 10s infinite ease-in-out alternate;
+            pointer-events: none;
+        }
+        .orb-1 { width: 450px; height: 450px; background: rgba(253, 186, 116, 0.45); top: -10%; left: -10%; }
+        .orb-2 { width: 550px; height: 550px; background: rgba(252, 211, 77, 0.35); bottom: -15%; right: -15%; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* 螢火蟲微光粒子動畫 */
+        .firefly {
+            position: absolute;
+            background: #fef08a;
+            border-radius: 50%;
+            filter: blur(1px);
+            box-shadow: 0 0 10px #fde047, 0 0 20px #facc15;
+            animation: firefly-float 6s infinite ease-in-out alternate;
+            pointer-events: none;
+            z-index: 5;
+        }
+        @keyframes firefly-float {
+            0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0.3; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-40px) translateX(25px) scale(1.2); opacity: 0.2; }
+        }
+
+        /* 畫面切換邏輯 (5個頁面) */
+        .view-section {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            transform: scale(0.98);
+            z-index: 10;
+        }
+        .view-section.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 20;
+        }
+
+        /* 封面 5 個漂浮角色 */
+        .floating-monster {
+            position: absolute;
+            border-radius: 50%;
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            box-shadow: 0 15px 30px rgba(120, 113, 108, 0.2);
+            animation: drift 6s infinite ease-in-out alternate;
+            border: 4px solid white;
+            background-color: white;
+            z-index: 30;
+        }
+        @media (min-width: 768px) {
+            .floating-monster { width: 120px; height: 120px; }
+        }
+        @keyframes drift {
+            0% { transform: translate(0, 0) rotate(-5deg); }
+            100% { transform: translate(15px, -25px) rotate(5deg); }
+        }
+        /* 剛好 5 隻角色的錯落定位 */
+        .fm-1 { top: 15%; left: 12%; animation-delay: 0s; }
+        .fm-2 { top: 18%; right: 12%; animation-delay: -1.5s; }
+        .fm-3 { bottom: 20%; left: 15%; animation-delay: -3s; }
+        .fm-4 { bottom: 18%; right: 15%; animation-delay: -4.5s; }
+        .fm-5 { top: 44%; left: 6%; animation-delay: -2s; }
+
+        /* 毛玻璃面板 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 40px -15px rgba(120, 113, 108, 0.15);
+        }
+
+        /* 怪獸卡片 */
+        .monster-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .monster-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 20px 40px -10px rgba(120, 113, 108, 0.2);
+        }
+
+        /* 音波動畫 */
+        .sound-wave {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 60px;
+            margin: 2rem 0;
+        }
+        .bar {
+            width: 6px;
+            background: #d6d3d1;
+            border-radius: 4px;
+            animation: wave 1s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 50px; }
+        }
+        .bar:nth-child(1) { animation-delay: 0.0s; }
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        .bar:nth-child(5) { animation-delay: 0.4s; }
+        .bar:nth-child(6) { animation-delay: 0.5s; }
+        .bar:nth-child(7) { animation-delay: 0.4s; }
+        .bar:nth-child(8) { animation-delay: 0.3s; }
+        .bar:nth-child(9) { animation-delay: 0.2s; }
+
+        /* 聆聽中怪獸發光漂浮 */
+        .listening-monster {
+            animation: breathe 4s ease-in-out infinite alternate;
+            transition: box-shadow 0.5s ease, border-color 0.5s ease;
+        }
+        @keyframes breathe {
+            0% { transform: translateY(0px) scale(1); }
+            100% { transform: translateY(-15px) scale(1.02); }
+        }
+
+        /* 留言輸入框自訂捲軸 */
+        textarea::-webkit-scrollbar { width: 6px; }
+        textarea::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+    </style>
+</head>
+<body class="relative min-h-screen">
+
+    <!-- 溫暖光暈 -->
+    <div class="glowing-orb orb-1"></div>
+    <div class="glowing-orb orb-2"></div>
+
+    <!-- 螢火蟲微光粒子特效 -->
+    <div class="firefly" style="width: 8px; height: 8px; top: 25%; left: 20%; animation-delay: 0s;"></div>
+    <div class="firefly" style="width: 6px; height: 6px; top: 70%; left: 15%; animation-delay: -2s;"></div>
+    <div class="firefly" style="width: 10px; height: 10px; top: 30%; right: 22%; animation-delay: -1s;"></div>
+    <div class="firefly" style="width: 7px; height: 7px; top: 75%; right: 18%; animation-delay: -3.5s;"></div>
+    <div class="firefly" style="width: 6px; height: 6px; top: 50%; left: 8%; animation-delay: -4s;"></div>
+    <div class="firefly" style="width: 8px; height: 8px; top: 45%; right: 9%; animation-delay: -2.5s;"></div>
+
+    <!-- [頁面 1] 封面區 (剛好 5 個角色漂浮) -->
+    <main id="view-cover" class="view-section active w-full h-screen">
+        <img src="IMG_2604.jpg" class="floating-monster fm-1" alt="成績怪">
+        <img src="IMG_2603.jpg" class="floating-monster fm-2" alt="社交怪">
+        <img src="IMG_2602.jpg" class="floating-monster fm-3" alt="家庭怪">
+        <img src="IMG_2601.jpg" class="floating-monster fm-4" alt="暈船怪">
+        <img src="IMG_2600.jpg" class="floating-monster fm-5" alt="未來怪">
+        
+        <div class="z-40 text-center glass-panel p-8 md:p-14 rounded-[2.5rem] max-w-2xl mx-4 relative overflow-hidden shadow-xl border border-white/80">
+            <h2 class="text-xl md:text-2xl text-stone-500 font-medium tracking-widest mb-2 font-serif-tc">焦慮聲音解籤</h2>
+            <h1 class="text-5xl md:text-7xl font-bold tracking-widest mb-6 text-stone-800 font-serif-tc">話有回聲</h1>
+            
+            <div class="bg-white/50 p-6 rounded-2xl mb-8 border border-white/60 shadow-inner">
+                <p class="text-base md:text-lg text-stone-600 font-medium leading-relaxed">
+                    閉上眼睛，深呼吸。<br>
+                    在這裡，你的每一份不安與迷惘，<br>
+                    都會得到最溫柔的迴盪。
+                </p>
+            </div>
+
+            <button onclick="goToSelection()" class="px-10 py-4 rounded-full bg-orange-100 hover:bg-orange-200 transition-all border border-orange-200 shadow-md text-stone-700 font-bold tracking-wider text-lg transform hover:scale-105">
+                開始聲音解籤
+            </button>
+        </div>
+    </main>
+
+    <!-- [頁面 2] 選擇怪獸區 -->
+    <section id="view-selection" class="view-section w-full px-4 md:px-12">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold tracking-wider mb-4 text-stone-800 font-serif-tc">哪一隻小怪獸，最能代表你現在的心情？</h2>
+            <p class="text-base md:text-lg text-stone-500 font-light mb-2">點擊一隻怪獸，讓我們接住你的煩惱</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 w-full max-w-5xl z-30">
+            <!-- 未來怪 -->
+            <div class="glass-panel monster-card rounded-3xl p-6 flex flex-col items-center justify-center border-t-4 border-blue-400" onclick="selectMonster('blue')">
+                <div class="w-20 h-20 md:w-28 md:h-28 rounded-full mb-4 shadow-md border-4 border-white bg-blue-100 overflow-hidden flex-shrink-0">
+                    <img src="IMG_2600.jpg" class="w-full h-full object-cover" alt="未來怪">
+                </div>
+                <h3 class="text-xl font-bold text-stone-800 mb-1">未來怪</h3>
+                <p class="text-sm text-stone-500">事業 / 迷茫</p>
+            </div>
+            
+            <!-- 暈船怪 -->
+            <div class="glass-panel monster-card rounded-3xl p-6 flex flex-col items-center justify-center border-t-4 border-red-400" onclick="selectMonster('red')">
+                <div class="w-20 h-20 md:w-28 md:h-28 rounded-full mb-4 shadow-md border-4 border-white bg-red-100 overflow-hidden flex-shrink-0">
+                    <img src="IMG_2601.jpg" class="w-full h-full object-cover" alt="暈船怪">
+                </div>
+                <h3 class="text-xl font-bold text-stone-800 mb-1">暈船怪</h3>
+                <p class="text-sm text-stone-500">愛情 / 情感</p>
+            </div>
+
+            <!-- 家庭怪 -->
+            <div class="glass-panel monster-card rounded-3xl p-6 flex flex-col items-center justify-center border-t-4 border-orange-400 col-span-2 md:col-span-1" onclick="selectMonster('orange')">
+                <div class="w-20 h-20 md:w-28 md:h-28 rounded-full mb-4 shadow-md border-4 border-white bg-orange-100 overflow-hidden flex-shrink-0">
+                    <img src="IMG_2602.jpg" class="w-full h-full object-cover" alt="家庭怪">
+                </div>
+                <h3 class="text-xl font-bold text-stone-800 mb-1">家庭怪</h3>
+                <p class="text-sm text-stone-500">親情 / 壓力</p>
+            </div>
+
+            <!-- 社交怪 -->
+            <div class="glass-panel monster-card rounded-3xl p-6 flex flex-col items-center justify-center border-t-4 border-green-400" onclick="selectMonster('green')">
+                <div class="w-20 h-20 md:w-28 md:h-28 rounded-full mb-4 shadow-md border-4 border-white bg-green-100 overflow-hidden flex-shrink-0">
+                    <img src="IMG_2603.jpg" class="w-full h-full object-cover" alt="社交怪">
+                </div>
+                <h3 class="text-xl font-bold text-stone-800 mb-1">社交怪</h3>
+                <p class="text-sm text-stone-500">朋友 / 眼光</p>
+            </div>
+
+            <!-- 成績怪 -->
+            <div class="glass-panel monster-card rounded-3xl p-6 flex flex-col items-center justify-center border-t-4 border-yellow-400" onclick="selectMonster('yellow')">
+                <div class="w-20 h-20 md:w-28 md:h-28 rounded-full mb-4 shadow-md border-4 border-white bg-yellow-100 overflow-hidden flex-shrink-0">
+                    <img src="IMG_2604.jpg" class="w-full h-full object-cover" alt="成績怪">
+                </div>
+                <h3 class="text-xl font-bold text-stone-800 mb-1">成績怪</h3>
+                <p class="text-sm text-stone-500">課業 / 分數</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- [頁面 3] 聆聽畫面區 -->
+    <section id="view-listening" class="view-section w-full px-4 text-center">
+        <!-- 發光漂浮的怪獸圖片容器 -->
+        <div class="relative w-48 h-48 md:w-56 md:h-56 mx-auto mb-10">
+            <div id="listening-img-container" class="absolute inset-0 rounded-full border-4 border-white listening-monster bg-white overflow-hidden shadow-2xl">
+                <img id="listening-img" src="" class="w-full h-full object-cover" alt="Selected Monster">
+            </div>
+        </div>
+
+        <h2 class="text-2xl md:text-3xl font-bold text-stone-800 tracking-widest mb-2 font-serif-tc">正在為你解籤...</h2>
+        <p class="text-sm md:text-base text-stone-500 mb-8 font-light">請戴上耳機，靜靜感受這份平靜</p>
+
+        <!-- 動態音波 -->
+        <div class="sound-wave mb-12" id="sound-wave-container">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <button onclick="goToWriting()" class="px-10 py-3 rounded-full bg-white hover:bg-stone-50 transition-all border border-stone-200 shadow-sm text-stone-600 font-bold tracking-wider text-sm">
+            結束聆聽
+        </button>
+    </section>
+
+    <!-- [頁面 4] 留言寫作區 -->
+    <section id="view-writing" class="view-section w-full px-4">
+        <div class="glass-panel p-8 md:p-12 rounded-[2.5rem] max-w-2xl w-full text-center relative overflow-hidden z-30">
+            <h2 class="text-2xl md:text-3xl font-bold text-stone-800 tracking-widest mb-4 font-serif-tc">聆聽結束了。</h2>
+            <p class="text-base md:text-lg text-stone-600 mb-8 font-medium">請在這裡，留下一句給現在自己的話。</p>
+            
+            <div class="relative mb-10">
+                <textarea id="self-message" rows="5" class="w-full bg-white/50 border-2 border-transparent rounded-2xl p-6 text-stone-700 text-lg leading-relaxed focus:outline-none transition-all duration-300 resize-none shadow-inner backdrop-blur-sm placeholder-stone-400 font-serif-tc" placeholder="想對自己說些什麼呢...？"></textarea>
+            </div>
+            
+            <button onclick="submitMessage()" class="px-12 py-4 rounded-full bg-stone-800 hover:bg-stone-700 text-white transition-all shadow-lg font-bold tracking-widest text-lg w-full md:w-auto">
+                溫柔送出
+            </button>
+        </div>
+    </section>
+
+    <!-- [頁面 5] 感謝與重置區 -->
+    <section id="view-thanks" class="view-section w-full px-4">
+        <div class="glass-panel p-12 md:p-16 rounded-[2.5rem] max-w-xl w-full text-center z-30 flex flex-col items-center">
+            <svg class="w-20 h-20 text-orange-300 mb-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800 tracking-widest mb-12 font-serif-tc leading-relaxed">
+                你的聲音已被<br>溫柔接住。
+            </h2>
+            
+            <button onclick="resetToCover()" class="px-8 py-3 rounded-full bg-white hover:bg-stone-50 transition-all border border-stone-200 text-stone-500 shadow-sm font-medium tracking-wider text-sm">
+                回到首頁
+            </button>
+        </div>
+    </section>
+
+    <!-- 邏輯控制 -->
+    <script>
+        const views = {
+            cover: document.getElementById('view-cover'),
+            selection: document.getElementById('view-selection'),
+            listening: document.getElementById('view-listening'),
+            writing: document.getElementById('view-writing'),
+            thanks: document.getElementById('view-thanks')
+        };
+        
+        const listeningImg = document.getElementById('listening-img');
+        const listeningImgContainer = document.getElementById('listening-img-container');
+        const soundWaveBars = document.querySelectorAll('#sound-wave-container .bar');
+        const selfMessageInput = document.getElementById('self-message');
+
+        let currentAudio = null;
+
+        const monsterData = {
+            blue: {
+                src: 'IMG_2600.jpg',
+                color: '#3b82f6', 
+                glowColor: 'rgba(59, 130, 246, 0.4)'
+            },
+            red: {
+                src: 'IMG_2601.jpg',
+                color: '#ef4444', 
+                glowColor: 'rgba(239, 68, 68, 0.4)'
+            },
+            orange: {
+                src: 'IMG_2602.jpg',
+                color: '#f97316', 
+                glowColor: 'rgba(249, 115, 22, 0.4)'
+            },
+            green: {
+                src: 'IMG_2603.jpg',
+                color: '#22c55e', 
+                glowColor: 'rgba(34, 197, 94, 0.4)'
+            },
+            yellow: {
+                src: 'IMG_2604.jpg',
+                color: '#eab308', 
+                glowColor: 'rgba(234, 179, 8, 0.4)'
+            }
+        };
+
+        function switchView(hideView, showView) {
+            hideView.classList.remove('active');
+            setTimeout(() => {
+                showView.classList.add('active');
+            }, 800);
+        }
+
+        function goToSelection() {
+            switchView(views.cover, views.selection);
+        }
+
+        function selectMonster(type) {
+            const data = monsterData[type];
+            
+            listeningImg.src = data.src;
+            listeningImgContainer.style.borderColor = data.color;
+            listeningImgContainer.style.boxShadow = `0 0 40px ${data.glowColor}, 0 20px 30px -10px rgba(0,0,0,0.1)`;
+            
+            soundWaveBars.forEach(bar => {
+                bar.style.backgroundColor = data.color;
+                bar.style.boxShadow = `0 0 10px ${data.glowColor}`;
+            });
+
+            selfMessageInput.addEventListener('focus', function() {
+                this.style.borderColor = data.color;
+                this.style.boxShadow = `0 0 0 4px ${data.glowColor}`;
+            });
+            selfMessageInput.addEventListener('blur', function() {
+                this.style.borderColor = 'transparent';
+                this.style.boxShadow = 'none';
+            });
+            
+            // 隨機從該怪獸的 6 個 m4a 音檔中抽一個播放[cite: 1]
+            const randomNum = Math.floor(Math.random() * 6) + 1;
+            const audioPath = `audio/${type}_${randomNum}.m4a`;
+
+            if (currentAudio) {
+                currentAudio.pause();
+            }
+            currentAudio = new Audio(audioPath);
+            currentAudio.play().catch(error => {
+                console.log("自動播放被瀏覽器阻擋或找不到音檔：", error);
+            });
+
+            switchView(views.selection, views.listening);
+        }
+
+        function goToWriting() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            switchView(views.listening, views.writing);
+        }
+
+        function submitMessage() {
+            switchView(views.writing, views.thanks);
+        }
+
+        function resetToCover() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            selfMessageInput.value = '';
+            selfMessageInput.style.borderColor = 'transparent';
+            selfMessageInput.style.boxShadow = 'none';
+            
+            switchView(views.thanks, views.cover);
+        }
+    </script>
+</body>
+</html>
+```[cite: 1]
